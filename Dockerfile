@@ -1,19 +1,23 @@
 FROM python:3.12-slim
 
-ENV POETRY_VIRTUALENVS_CREATE=false \
-    PYTHONDONTWRITEBYTECODE=1 \
+COPY --from=ghcr.io/astral-sh/uv:0.11.21 /uv /uvx /bin/
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=0 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir poetry
-
 # Instala só as dependências de produção primeiro, para aproveitar o cache
 # de camadas: o código pode mudar sem reinstalar tudo.
-COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-interaction --no-ansi --only main --no-root
+COPY pyproject.toml uv.lock .python-version ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev
 
 COPY . .
+
+ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
 ENTRYPOINT ["./entrypoint.sh"]
