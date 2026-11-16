@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
-from testcontainers.postgres import PostgresContainer
+from testcontainers.community.postgres import PostgresContainer
 
 from fast_zero.app import app
 from fast_zero.database import get_session
@@ -43,10 +43,9 @@ def client(session):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def engine():
-    with PostgresContainer('postgres:18', driver='psycopg') as postgres:
-
+    with PostgresContainer("postgres:18", driver="psycopg") as postgres:
         _engine = create_engine(postgres.get_connection_url())
 
         with _engine.begin():
