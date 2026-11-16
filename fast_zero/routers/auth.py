@@ -26,7 +26,7 @@ async def login_for_access_token(session: T_Session, form_data: T_OAuth2Form):
             detail="Incorrect email or password",
         )
 
-    if not verify_password(form_data.password, user.password):
+    if not await verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="Incorrect email or password",

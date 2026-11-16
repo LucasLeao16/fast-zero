@@ -44,7 +44,7 @@ async def create_user(
 
     db_user = User(
         username=user.username,
-        password=get_password_hash(user.password),
+        password=await get_password_hash(user.password),
         email=user.email,
     )
     session.add(db_user)
@@ -68,7 +68,7 @@ async def update_user(
         )
 
     current_user.username = user.username
-    current_user.password = get_password_hash(user.password)
+    current_user.password = await get_password_hash(user.password)
     current_user.email = user.email
     await session.commit()
     await session.refresh(current_user)

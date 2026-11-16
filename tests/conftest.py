@@ -80,7 +80,7 @@ async def client(session):
 
 
 async def _create_user(session, password):
-    user = UserFactory(password=get_password_hash(password))
+    user = UserFactory(password=await get_password_hash(password))
 
     session.add(user)
     await session.commit()

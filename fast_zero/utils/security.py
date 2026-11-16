@@ -3,6 +3,7 @@ from http import HTTPStatus
 from zoneinfo import ZoneInfo
 
 from fastapi import Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from fastapi.security import OAuth2PasswordBearer
 from jwt import DecodeError, decode, encode
 from jwt.exceptions import ExpiredSignatureError
@@ -33,12 +34,16 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-def get_password_hash(password: str):
-    return pwd_context.hash(password)
+# O argon2 é intencionalmente pesado em CPU; rodar numa thread evita
+# bloquear o event loop (e as outras requisições) durante o cálculo.
+async def get_password_hash(password: str) -> str:
+    return await run_in_threadpool(pwd_context.hash, password)
 
 
-def verify_password(plain_password: str, hashed_password: str):
-    return pwd_context.verify(plain_password, hashed_password)
+async def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return await run_in_threadpool(
+        pwd_context.verify, plain_password, hashed_password
+    )
 
 
 async def get_current_user(
