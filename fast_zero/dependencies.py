@@ -1,3 +1,10 @@
+"""Dependências reutilizáveis das rotas.
+
+`Annotated[Tipo, Depends(função)]` diz ao FastAPI: "para preencher este
+parâmetro, chame a função". Os apelidos abaixo evitam repetir isso em
+cada rota.
+"""
+
 from typing import Annotated
 
 from fastapi import Depends

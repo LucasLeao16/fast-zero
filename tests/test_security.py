@@ -32,9 +32,9 @@ async def test_jwt_invalid_token(client):
     assert response.json() == {"detail": "Could not validate credentials"}
 
 
-async def test_get_current_user_cant_decod_token():
+async def test_get_current_user_cant_decode_token(session):
     with pytest.raises(HTTPException):
-        await get_current_user([])
+        await get_current_user(session, "token-invalido")
 
 
 async def test_get_current_user_without_username(session):

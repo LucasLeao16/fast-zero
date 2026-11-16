@@ -14,6 +14,7 @@ async def test_create_todo(client, token):
             "state": "draft",
         },
     )
+    assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
         "id": 1,
         "title": "Test todo",

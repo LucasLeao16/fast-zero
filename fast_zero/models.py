@@ -1,11 +1,18 @@
 from datetime import datetime
+from enum import StrEnum
 
 from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, registry, relationship
 
-from fast_zero.schemas.todo import TodoState
-
 table_registry = registry()
+
+
+class TodoState(StrEnum):
+    draft = "draft"
+    todo = "todo"
+    doing = "doing"
+    done = "done"
+    trash = "trash"
 
 
 @table_registry.mapped_as_dataclass

@@ -160,3 +160,16 @@ async def test_update_user_with_existing_email(
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {"detail": "Email already exists"}
+
+
+async def test_read_users_pagination(client, user, other_user):
+    response = await client.get("/users/?offset=1&limit=1")
+
+    assert response.status_code == HTTPStatus.OK
+    assert [u["id"] for u in response.json()["users"]] == [other_user.id]
+
+
+async def test_read_users_limit_above_max_should_return_422(client):
+    response = await client.get("/users/?limit=1000")
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

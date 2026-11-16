@@ -1,37 +1,36 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
-from zoneinfo import ZoneInfo
+from typing import Annotated
 
 from fastapi import Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from fastapi.security import OAuth2PasswordBearer
-from jwt import DecodeError, decode, encode
-from jwt.exceptions import ExpiredSignatureError
+from jwt import InvalidTokenError, decode, encode
 from pwdlib import PasswordHash
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fast_zero.database import get_session
 from fast_zero.models import User
-from fast_zero.schemas.token import TokenData
 from fast_zero.settings import Settings
-
-pwd_context = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 settings = Settings()
 
+pwd_context = PasswordHash.recommended()
 
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.now(tz=ZoneInfo("UTC")) + timedelta(
+# Lê o header "Authorization: Bearer <token>" e informa ao Swagger
+# (/docs) em qual rota o login é feito.
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
+
+def create_access_token(data: dict) -> str:
+    """Gera um JWT assinado com SECRET_KEY e com data de expiração."""
+    expire = datetime.now(UTC) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
-    to_encode.update({"exp": expire})
-    encoded_jwt = encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-    )
-    return encoded_jwt
+    payload = {**data, "exp": expire}
+
+    return encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
 # O argon2 é intencionalmente pesado em CPU; rodar numa thread evita
@@ -47,9 +46,10 @@ async def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 async def get_current_user(
-    session: AsyncSession = Depends(get_session),
-    token: str = Depends(oauth2_scheme),
-):
+    session: Annotated[AsyncSession, Depends(get_session)],
+    token: Annotated[str, Depends(oauth2_scheme)],
+) -> User:
+    """Valida o token e retorna o usuário dono dele (ou 401)."""
     credentials_exception = HTTPException(
         status_code=HTTPStatus.UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -60,20 +60,16 @@ async def get_current_user(
         payload = decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        username: str = payload.get("sub")
-        if not username:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-    except DecodeError:
+    except (
+        InvalidTokenError
+    ):  # token malformado, assinatura errada ou expirado
         raise credentials_exception
 
-    except ExpiredSignatureError:
+    email = payload.get("sub")  # "sub" (subject): quem é o dono do token
+    if not email:
         raise credentials_exception
 
-    user = await session.scalar(
-        select(User).where(User.email == token_data.username)
-    )
-
+    user = await session.scalar(select(User).where(User.email == email))
     if not user:
         raise credentials_exception
 

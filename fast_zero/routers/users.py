@@ -1,26 +1,31 @@
 from http import HTTPStatus
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from fast_zero.dependencies import T_CurrentUser, T_Session
 from fast_zero.models import User
+from fast_zero.schemas.filter import FilterPage
 from fast_zero.schemas.user import UserList, UserPublic, UserSchema
-from fast_zero.types.index import T_CurrentUser, T_Session
 from fast_zero.utils.security import get_password_hash
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/", status_code=HTTPStatus.OK, response_model=UserList)
-async def read_users(session: T_Session, skip: int = 0, limit: int = 100):
-    users = (
-        await session.scalars(select(User).offset(skip).limit(limit))
-    ).all()
+@router.get("/", response_model=UserList)
+async def read_users(session: T_Session, page: Annotated[FilterPage, Query()]):
+    query = (
+        select(User).order_by(User.id).offset(page.offset).limit(page.limit)
+    )
+    users = (await session.scalars(query)).all()
+
     return {"users": users}
 
 
 async def ensure_username_and_email_available(
-    session: T_Session, user: UserSchema, ignore_user_id: int | None = None
+    session: AsyncSession, user: UserSchema, ignore_user_id: int | None = None
 ):
     """Levanta 400 se o username ou o email já pertencem a outro usuário.
 
@@ -66,7 +71,7 @@ async def create_user(
     return db_user
 
 
-@router.put("/{user_id}", status_code=HTTPStatus.OK, response_model=UserPublic)
+@router.put("/{user_id}", response_model=UserPublic)
 async def update_user(
     user_id: int,
     user: UserSchema,

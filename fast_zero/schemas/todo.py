@@ -1,16 +1,7 @@
-from enum import Enum
-
 from pydantic import BaseModel
 
-# from datetime import datetime
-
-
-class TodoState(str, Enum):
-    draft = "draft"
-    todo = "todo"
-    doing = "doing"
-    done = "done"
-    trash = "trash"
+from fast_zero.models import TodoState
+from fast_zero.schemas.filter import FilterPage
 
 
 class TodoSchema(BaseModel):
@@ -28,6 +19,12 @@ class TodoList(BaseModel):
 
 
 class TodoUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    state: TodoState | None = None
+
+
+class FilterTodo(FilterPage):
     title: str | None = None
     description: str | None = None
     state: TodoState | None = None
