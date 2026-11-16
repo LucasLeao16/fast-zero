@@ -23,7 +23,11 @@ class User:
         init=False, onupdate=func.now(), nullable=True
     )
     todos: Mapped[list["Todo"]] = relationship(
-        init=False, back_populates="user", cascade="all, delete-orphan"
+        init=False,
+        back_populates="user",
+        cascade="all, delete-orphan",
+        # Em async não há lazy loading implícito: carrega junto com o User
+        lazy="selectin",
     )
 
 

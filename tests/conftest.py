@@ -1,15 +1,23 @@
+import asyncio
+
 import factory
 import factory.fuzzy
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from testcontainers.community.postgres import PostgresContainer
 
 from fast_zero.app import app
 from fast_zero.database import get_session
 from fast_zero.models import Todo, TodoState, User, table_registry
 from fast_zero.utils.security import get_password_hash
+
+
+def pytest_asyncio_loop_factories(config, item):
+    # O psycopg async não funciona com o ProactorEventLoop (padrão no
+    # Windows); o SelectorEventLoop funciona em todas as plataformas.
+    return {"selector": asyncio.SelectorEventLoop}
 
 
 class UserFactory(factory.Factory):
@@ -31,67 +39,70 @@ class TodoFactory(factory.Factory):
     user_id = 1
 
 
-@pytest.fixture
-def client(session):
+@pytest.fixture(scope="session")
+def database_url():
+    with PostgresContainer("postgres:18", driver="psycopg") as postgres:
+        yield postgres.get_connection_url()
+
+
+@pytest_asyncio.fixture
+async def engine(database_url):
+    _engine = create_async_engine(database_url)
+    yield _engine
+    await _engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def session(engine):
+    async with engine.begin() as conn:
+        await conn.run_sync(table_registry.metadata.create_all)
+
+    async with AsyncSession(engine, expire_on_commit=False) as session:
+        yield session
+
+    async with engine.begin() as conn:
+        await conn.run_sync(table_registry.metadata.drop_all)
+
+
+@pytest_asyncio.fixture
+async def client(session):
     def get_session_override():
         return session
 
-    with TestClient(app) as client:
-        app.dependency_overrides[get_session] = get_session_override
+    app.dependency_overrides[get_session] = get_session_override
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         yield client
 
     app.dependency_overrides.clear()
 
 
-@pytest.fixture(scope="session")
-def engine():
-    with PostgresContainer("postgres:18", driver="psycopg") as postgres:
-        _engine = create_engine(postgres.get_connection_url())
-
-        with _engine.begin():
-            yield _engine
-
-
-@pytest.fixture
-def session(engine):
-    table_registry.metadata.create_all(engine)
-
-    with Session(engine) as session:
-        yield session
-        session.rollback()
-
-    table_registry.metadata.drop_all(engine)
-
-
-@pytest.fixture
-def user(session):
-    password = "testtest"
+async def _create_user(session, password):
     user = UserFactory(password=get_password_hash(password))
 
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
 
-    user.clean_password = "testtest"
-
+    user.clean_password = password
     return user
 
 
-@pytest.fixture
-def other_user(session):
-    pwd = "testtest"
-    user = UserFactory(password=get_password_hash(pwd))
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-
-    user.clean_password = pwd
-    return user
+@pytest_asyncio.fixture
+async def user(session):
+    return await _create_user(session, "testtest")
 
 
-@pytest.fixture
-def token(client, user):
-    response = client.post(
+@pytest_asyncio.fixture
+async def other_user(session):
+    return await _create_user(session, "testtest")
+
+
+@pytest_asyncio.fixture
+async def token(client, user):
+    response = await client.post(
         "/auth/token",
         data={"username": user.email, "password": user.clean_password},
     )

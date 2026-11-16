@@ -11,7 +11,7 @@ router = APIRouter(prefix="/todos", tags=["todos"])
 
 
 @router.post("/", response_model=TodoPublic)
-def create_todo(
+async def create_todo(
     todo: TodoSchema,
     user: T_CurrentUser,
     session: T_Session,
@@ -23,14 +23,14 @@ def create_todo(
         user_id=user.id,
     )
     session.add(db_todo)
-    session.commit()
-    session.refresh(db_todo)
+    await session.commit()
+    await session.refresh(db_todo)
 
     return db_todo
 
 
 @router.get("/", response_model=TodoList)
-def list_todos(  # noqa
+async def list_todos(  # noqa
     session: T_Session,
     user: T_CurrentUser,
     title: str = Query(None),
@@ -50,14 +50,14 @@ def list_todos(  # noqa
     if state:
         query = query.filter(Todo.state == state)
 
-    todos = session.scalars(query.offset(offset).limit(limit)).all()
+    todos = (await session.scalars(query.offset(offset).limit(limit))).all()
 
     return {"todos": todos}
 
 
 @router.delete("/{todo_id}")
-def delete_todo(todo_id: int, session: T_Session, user: T_CurrentUser):
-    todo = session.scalar(
+async def delete_todo(todo_id: int, session: T_Session, user: T_CurrentUser):
+    todo = await session.scalar(
         select(Todo).where(Todo.user_id == user.id, Todo.id == todo_id)
     )
 
@@ -66,17 +66,17 @@ def delete_todo(todo_id: int, session: T_Session, user: T_CurrentUser):
             status_code=HTTPStatus.NOT_FOUND, detail="Task not found."
         )
 
-    session.delete(todo)
-    session.commit()
+    await session.delete(todo)
+    await session.commit()
 
     return {"message": "Task has been deleted successfully."}
 
 
 @router.patch("/{todo_id}", response_model=TodoPublic)
-def patch_todo(
+async def patch_todo(
     todo_id: int, session: T_Session, user: T_CurrentUser, todo: TodoUpdate
 ):
-    db_todo = session.scalar(
+    db_todo = await session.scalar(
         select(Todo).where(Todo.user_id == user.id, Todo.id == todo_id)
     )
 
@@ -89,7 +89,7 @@ def patch_todo(
         setattr(db_todo, key, value)
 
     session.add(db_todo)
-    session.commit()
-    session.refresh(db_todo)
+    await session.commit()
+    await session.refresh(db_todo)
 
     return db_todo

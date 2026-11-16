@@ -3,20 +3,20 @@ from http import HTTPStatus
 from fast_zero.schemas.user import UserPublic
 
 
-def test_read_users(client):
-    response = client.get("/users/")
+async def test_read_users(client):
+    response = await client.get("/users/")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"users": []}
 
 
-def test_read_users_with_users(client, user):
+async def test_read_users_with_users(client, user):
     user_schema = UserPublic.model_validate(user).model_dump()
-    response = client.get("/users/")
+    response = await client.get("/users/")
     assert response.json() == {"users": [user_schema]}
 
 
-def test_create_user(client):
-    response = client.post(
+async def test_create_user(client):
+    response = await client.post(
         "/users/",
         json={
             "username": "alice",
@@ -32,8 +32,8 @@ def test_create_user(client):
     }
 
 
-def test_create_username_allready_exist(client, user):
-    client.post(
+async def test_create_username_allready_exist(client, user):
+    await client.post(
         "/users/",
         json={
             "username": "lucas",
@@ -41,7 +41,7 @@ def test_create_username_allready_exist(client, user):
             "password": "password",
         },
     )
-    response = client.post(
+    response = await client.post(
         "/users/",
         json={
             "username": "lucas",
@@ -52,8 +52,8 @@ def test_create_username_allready_exist(client, user):
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-def test_create_email_allready_exist(client, user):
-    client.post(
+async def test_create_email_allready_exist(client, user):
+    await client.post(
         "/users/",
         json={
             "username": "lucas",
@@ -61,7 +61,7 @@ def test_create_email_allready_exist(client, user):
             "password": "password",
         },
     )
-    response = client.post(
+    response = await client.post(
         "/users/",
         json={
             "username": "Noctis",
@@ -72,8 +72,8 @@ def test_create_email_allready_exist(client, user):
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-def test_update_user(client, user, token):
-    response = client.put(
+async def test_update_user(client, user, token):
+    response = await client.put(
         f"/users/{user.id}",
         headers={"Authorization": f"Bearer {token}"},
         json={
@@ -90,8 +90,8 @@ def test_update_user(client, user, token):
     }
 
 
-def test_update_user_with_wrong_user(client, other_user, token):
-    response = client.put(
+async def test_update_user_with_wrong_user(client, other_user, token):
+    response = await client.put(
         f"/users/{other_user.id}",
         headers={"Authorization": f"Bearer {token}"},
         json={
@@ -104,8 +104,8 @@ def test_update_user_with_wrong_user(client, other_user, token):
     assert response.json() == {"detail": "Not enough permissions"}
 
 
-def test_delete_user(client, user, token):
-    response = client.delete(
+async def test_delete_user(client, user, token):
+    response = await client.delete(
         f"/users/{user.id}",
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -114,8 +114,8 @@ def test_delete_user(client, user, token):
     assert response.json() == {"message": "User deleted"}
 
 
-def test_delete_user_wrong_user(client, other_user, token):
-    response = client.delete(
+async def test_delete_user_wrong_user(client, other_user, token):
+    response = await client.delete(
         f"/users/{other_user.id}",
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -123,6 +123,6 @@ def test_delete_user_wrong_user(client, other_user, token):
     assert response.json() == {"detail": "Not enough permissions"}
 
 
-def test_delete_user_not_exist(client, other_user):
-    response = client.delete(f"/users/{other_user.id}")
+async def test_delete_user_not_exist(client, other_user):
+    response = await client.delete(f"/users/{other_user.id}")
     assert response.status_code == HTTPStatus.UNAUTHORIZED

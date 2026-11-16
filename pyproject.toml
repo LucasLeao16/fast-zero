@@ -6,15 +6,15 @@ authors = [{ name = "LucasLeao16", email = "lucas99br@gmail.com" }]
 requires-python = ">=3.14"
 readme = "README.md"
 dependencies = [
-    "fastapi[standard]>=0.163.1",
     "pydantic[email]>=2.14.3",
-    "sqlalchemy>=2.1.9",
+    "sqlalchemy[asyncio]>=2.1.9",
     "pydantic-settings>=2.16.3",
     "alembic>=1.20.1",
     "pyjwt>=2.15.1",
     "pwdlib[argon2]>=0.4.2",
     "python-multipart>=0.0.34",
     "psycopg[binary]>=3.3.9",
+    "fastapi[standard-no-fastapi-cloud-cli]>=0.163.1",
 ]
 
 [dependency-groups]
@@ -26,6 +26,7 @@ dev = [
     "factory-boy>=3.3.3",
     "freezegun>=1.5.5",
     "testcontainers>=4.15.0",
+    "pytest-asyncio>=1.5.0",
 ]
 
 [tool.uv]
@@ -34,6 +35,8 @@ package = false
 
 [tool.pytest.ini_options]
 pythonpath = "."
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 79

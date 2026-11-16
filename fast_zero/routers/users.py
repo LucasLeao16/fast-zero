@@ -12,17 +12,19 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/", status_code=HTTPStatus.OK, response_model=UserList)
-def read_users(session: T_Session, skip: int = 0, limit: int = 100):
-    users = session.scalars(select(User).offset(skip).limit(limit)).all()
+async def read_users(session: T_Session, skip: int = 0, limit: int = 100):
+    users = (
+        await session.scalars(select(User).offset(skip).limit(limit))
+    ).all()
     return {"users": users}
 
 
 @router.post("/", status_code=HTTPStatus.CREATED, response_model=UserPublic)
-def create_user(
+async def create_user(
     user: UserSchema,
     session: T_Session,
 ):
-    db_user = session.scalar(
+    db_user = await session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
         )
@@ -46,14 +48,14 @@ def create_user(
         email=user.email,
     )
     session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+    await session.commit()
+    await session.refresh(db_user)
 
     return db_user
 
 
 @router.put("/{user_id}", status_code=HTTPStatus.OK, response_model=UserPublic)
-def update_user(
+async def update_user(
     user_id: int,
     user: UserSchema,
     session: T_Session,
@@ -68,14 +70,14 @@ def update_user(
     current_user.username = user.username
     current_user.password = get_password_hash(user.password)
     current_user.email = user.email
-    session.commit()
-    session.refresh(current_user)
+    await session.commit()
+    await session.refresh(current_user)
 
     return current_user
 
 
 @router.delete("/{user_id}")
-def delete_user(
+async def delete_user(
     user_id: int,
     session: T_Session,
     current_user: T_CurrentUser,
@@ -85,7 +87,7 @@ def delete_user(
             status_code=HTTPStatus.FORBIDDEN, detail="Not enough permissions"
         )
 
-    session.delete(current_user)
-    session.commit()
+    await session.delete(current_user)
+    await session.commit()
 
     return {"message": "User deleted"}
