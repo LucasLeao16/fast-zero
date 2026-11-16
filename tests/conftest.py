@@ -39,6 +39,7 @@ class TodoFactory(factory.Factory):
     user_id = 1
 
 
+# Sobe um Postgres descartável no Docker uma vez por execução dos testes
 @pytest.fixture(scope="session")
 def database_url():
     with PostgresContainer("postgres:18", driver="psycopg") as postgres:
@@ -52,6 +53,7 @@ async def engine(database_url):
     await _engine.dispose()
 
 
+# Cada teste começa com as tabelas vazias: cria antes e apaga depois
 @pytest_asyncio.fixture
 async def session(engine):
     async with engine.begin() as conn:
@@ -69,8 +71,10 @@ async def client(session):
     def get_session_override():
         return session
 
+    # Troca a sessão do banco real pela sessão do teste em todas as rotas
     app.dependency_overrides[get_session] = get_session_override
 
+    # ASGITransport chama a aplicação direto, sem abrir um servidor HTTP
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
@@ -86,6 +90,7 @@ async def _create_user(session, password):
     await session.commit()
     await session.refresh(user)
 
+    # Guarda a senha em texto puro só para os testes poderem fazer login
     user.clean_password = password
     return user
 

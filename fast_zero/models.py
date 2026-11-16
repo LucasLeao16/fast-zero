@@ -4,6 +4,8 @@ from enum import StrEnum
 from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, registry, relationship
 
+# O registry guarda os metadados de todas as tabelas; o Alembic e os
+# testes usam table_registry.metadata para saber o que criar.
 table_registry = registry()
 
 
@@ -15,6 +17,9 @@ class TodoState(StrEnum):
     trash = "trash"
 
 
+# mapped_as_dataclass transforma o model numa dataclass: User(...) recebe
+# os campos como argumentos. init=False tira o campo do construtor (o
+# banco é quem preenche id, created_at...).
 @table_registry.mapped_as_dataclass
 class User:
     __tablename__ = "users"
@@ -33,7 +38,8 @@ class User:
         init=False,
         back_populates="user",
         cascade="all, delete-orphan",
-        # Em async não há lazy loading implícito: carrega junto com o User
+        # Em async não há lazy loading implícito: os todos são carregados
+        # junto com o User (numa segunda query, SELECT ... WHERE IN).
         lazy="selectin",
     )
 
