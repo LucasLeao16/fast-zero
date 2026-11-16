@@ -182,3 +182,27 @@ async def test_patch_todo(session, client, user, token):
     )
     assert response.status_code == HTTPStatus.OK
     assert response.json()["title"] == "Patched title"
+
+
+async def test_patch_todo_description(session, client, user, token):
+    todo = TodoFactory(user_id=user.id)
+    session.add(todo)
+    await session.commit()
+
+    response = await client.patch(
+        f"/todos/{todo.id}",
+        json={"description": "Nova descrição"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["description"] == "Nova descrição"
+
+
+async def test_list_todos_invalid_state_should_return_422(client, token):
+    response = await client.get(
+        "/todos/?state=xyz",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

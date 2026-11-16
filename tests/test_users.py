@@ -126,3 +126,37 @@ async def test_delete_user_wrong_user(client, other_user, token):
 async def test_delete_user_not_exist(client, other_user):
     response = await client.delete(f"/users/{other_user.id}")
     assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+async def test_update_user_with_existing_username(
+    client, user, other_user, token
+):
+    response = await client.put(
+        f"/users/{user.id}",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "username": other_user.username,
+            "email": "novo@example.com",
+            "password": "mynewpassword",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {"detail": "Username already exists"}
+
+
+async def test_update_user_with_existing_email(
+    client, user, other_user, token
+):
+    response = await client.put(
+        f"/users/{user.id}",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "username": "novo",
+            "email": other_user.email,
+            "password": "mynewpassword",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {"detail": "Email already exists"}

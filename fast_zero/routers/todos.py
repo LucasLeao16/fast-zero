@@ -3,7 +3,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
 
-from fast_zero.models import Todo
+from fast_zero.models import Todo, TodoState
 from fast_zero.schemas.todo import TodoList, TodoPublic, TodoSchema, TodoUpdate
 from fast_zero.types.index import T_CurrentUser, T_Session
 
@@ -35,7 +35,7 @@ async def list_todos(  # noqa
     user: T_CurrentUser,
     title: str = Query(None),
     description: str = Query(None),
-    state: str = Query(None),
+    state: TodoState = Query(None),
     offset: int = Query(None),
     limit: int = Query(None),
 ):

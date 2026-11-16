@@ -19,28 +19,40 @@ async def read_users(session: T_Session, skip: int = 0, limit: int = 100):
     return {"users": users}
 
 
+async def ensure_username_and_email_available(
+    session: T_Session, user: UserSchema, ignore_user_id: int | None = None
+):
+    """Levanta 400 se o username ou o email já pertencem a outro usuário.
+
+    `ignore_user_id` permite que o próprio usuário mantenha seus dados
+    ao atualizar o cadastro.
+    """
+    query = select(User).where(
+        (User.username == user.username) | (User.email == user.email)
+    )
+
+    if ignore_user_id:
+        query = query.where(User.id != ignore_user_id)
+
+    db_user = await session.scalar(query)
+
+    if not db_user:
+        return
+
+    if db_user.username == user.username:
+        detail = "Username already exists"
+    else:
+        detail = "Email already exists"
+
+    raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=detail)
+
+
 @router.post("/", status_code=HTTPStatus.CREATED, response_model=UserPublic)
 async def create_user(
     user: UserSchema,
     session: T_Session,
 ):
-    db_user = await session.scalar(
-        select(User).where(
-            (User.username == user.username) | (User.email == user.email)
-        )
-    )
-
-    if db_user:
-        if db_user.username == user.username:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail="Username already exists",
-            )
-        elif db_user.email == user.email:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail="Email already exists",
-            )
+    await ensure_username_and_email_available(session, user)
 
     db_user = User(
         username=user.username,
@@ -66,6 +78,10 @@ async def update_user(
             status_code=HTTPStatus.FORBIDDEN,
             detail="Not enough permissions",
         )
+
+    await ensure_username_and_email_available(
+        session, user, ignore_user_id=current_user.id
+    )
 
     current_user.username = user.username
     current_user.password = await get_password_hash(user.password)
