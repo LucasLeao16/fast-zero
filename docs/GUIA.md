@@ -148,7 +148,7 @@ com campos tipados, e ela valida e converte os dados que chegam.
   ```python
   class UserSchema(BaseModel):
       username: str
-      email: EmailStr     # valida o formato do email
+      email: EmailStr  # valida o formato do email
       password: str
   ```
 
@@ -223,11 +223,11 @@ class Todo:
 
 ```python
 query = select(Todo).where(Todo.user_id == user.id)
-query = query.where(Todo.title.contains("abc"))      # LIKE '%abc%'
+query = query.where(Todo.title.contains("abc"))  # LIKE '%abc%'
 query = query.order_by(Todo.id).offset(0).limit(10)  # paginação
 
-todo = await session.scalar(query)               # um resultado (ou None)
-todos = (await session.scalars(query)).all()     # lista de resultados
+todo = await session.scalar(query)  # um resultado (ou None)
+todos = (await session.scalars(query)).all()  # lista de resultados
 ```
 
 A query é montada aos poucos e só vai ao banco no `await`. Por isso dá
@@ -503,10 +503,32 @@ uv run <comando>           # roda um comando dentro do .venv
   código. As regras ficam em `[tool.ruff]` no `pyproject.toml`: linhas
   de até 79 caracteres, imports ordenados (`I`), erros do Pyflakes (`F`),
   estilo PEP 8 (`E`, `W`), regras do Pylint (`PL`) e de pytest (`PT`).
+
+  O ruff tem dois comandos:
+  - `ruff check`: aponta problemas (import não usado, variável sem uso,
+    função com parâmetros demais...). Com `--fix`, corrige os que forem
+    seguros.
+  - `ruff format`: reescreve o código no estilo padrão (aspas, espaços,
+    quebras de linha). Com `--check`, só avisa o que mudaria. Com o
+    `preview` ativo, ele formata também os blocos de código Python
+    dentro dos arquivos `.md`, como este guia.
+
+  Para entender uma regra, rode `uv run ruff rule <código>`, por
+  exemplo `uv run ruff rule PLR0913`.
 - **taskipy**: atalhos para comandos longos, definidos em
-  `[tool.taskipy.tasks]`. O prefixo `pre_` roda antes e o `post_` roda
-  depois: `task test` executa `lint`, depois os testes, depois o
-  relatório HTML de cobertura.
+  `[tool.taskipy.tasks]`:
+
+  | Tarefa | O que roda |
+  |---|---|
+  | `task lint` | `ruff check` + `ruff format --check`: só verifica, não altera arquivos |
+  | `task format` | `ruff check --fix` + `ruff format`: corrige e formata |
+  | `task run` | `fastapi dev`: servidor com reload |
+  | `task test` | `lint`, depois os testes com cobertura, depois o relatório HTML |
+
+  O prefixo `pre_` roda antes e o `post_` roda depois: por isso o
+  `task test` executa o `pre_test` (lint) e o `post_test` (relatório).
+  Se o lint falhar, os testes nem rodam. Nesse caso, rode
+  `task format` e tente de novo.
 
 ### GitHub Actions (CI)
 

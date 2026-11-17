@@ -125,8 +125,8 @@ uv run task run                            # fastapi dev (com reload)
 
 ```bash
 uv run task test     # lint + testes + relatório de cobertura (htmlcov/)
-uv run task lint     # só o lint
-uv run task format   # corrige o lint e formata o código
+uv run task lint     # lint + verifica a formatação (não altera nada)
+uv run task format   # corrige o que der do lint e formata o código
 ```
 
 Os testes sobem um Postgres temporário via testcontainers, então o
