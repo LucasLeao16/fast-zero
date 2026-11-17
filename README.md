@@ -37,12 +37,16 @@ fast_zero/
     └── security.py   # hash de senha, geração e validação do JWT
 migrations/           # migrações do Alembic
 tests/                # testes (conftest.py tem as fixtures)
+exercicios/           # testes dos exercícios (fora do task test e do CI)
+docs/                 # guia de estudo, exercícios e respostas
 ```
 
 > 📘 Para entender como cada parte funciona e para que serve cada
 > tecnologia, veja o **[Guia de estudo](docs/GUIA.md)**, com o caminho de
-> uma requisição, explicações de cada ferramenta, o mapa dos arquivos e
-> exercícios.
+> uma requisição, explicações de cada ferramenta e o mapa dos arquivos.
+>
+> 🏋️ Para praticar, há **[25 exercícios](docs/EXERCICIOS.md)** com testes
+> automáticos e [respostas comentadas](docs/RESPOSTAS.md).
 
 **Model x schema:** o *model* (`models.py`) é a tabela no banco; o
 *schema* (`schemas/`) é o JSON que entra e sai da API. Eles são separados

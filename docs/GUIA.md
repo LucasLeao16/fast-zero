@@ -586,6 +586,11 @@ Pelo terminal: `gh run list` e `gh run watch`.
 | `test_security.py` | JWT e `get_current_user` |
 | `test_db.py` | models direto no banco |
 
+A pasta `exercicios/` tem um arquivo de teste por exercício de
+[EXERCICIOS.md](EXERCICIOS.md). Ela reaproveita as fixtures de
+`tests/conftest.py` e só roda quando chamada explicitamente
+(`uv run pytest exercicios`).
+
 ### Configuração e infraestrutura
 
 | Arquivo | Para que serve |
@@ -606,45 +611,19 @@ Pelo terminal: `gh run list` e `gh run watch`.
 
 ## 4. Exercícios
 
-Cada exercício passa por várias camadas do projeto. Rode
-`uv run task test` ao final de cada um.
+A melhor forma de fixar o conteúdo é alterar o código. Em
+**[EXERCICIOS.md](EXERCICIOS.md)** há 25 exercícios em 5 níveis, de
+rotas simples a relacionamentos muitos-para-muitos e segurança. Cada
+exercício traz:
 
-1. **Novo filtro.** Permita filtrar os todos por data de criação:
-   `GET /todos/?created_after=2026-01-01`.
-   *Dica:* adicione o campo em `FilterTodo` (tipo `date | None`) e um
-   `if` em `list_todos` com `Todo.created_at >= ...`. Escreva um teste.
+- o **comportamento esperado** (requisições, respostas e erros);
+- **dicas** escondidas, para abrir só se precisar;
+- um **teste automático** em `exercicios/`, que diz se a solução está
+  certa:
 
-2. **Novo campo com migração.** Adicione um campo opcional `due_date`
-   (prazo) ao `Todo`.
-   *Dica:* altere o model, gere a migração com `--autogenerate`, revise o
-   arquivo, aplique com `upgrade head` e confira com `alembic check`.
-   Depois inclua o campo nos schemas (`TodoSchema`, `TodoUpdate`) e nos
-   testes.
+  ```bash
+  uv run pytest exercicios/test_ex01_detalhe_todo.py
+  ```
 
-3. **Rota de detalhe.** Crie `GET /todos/{todo_id}`, que devolve um
-   todo do usuário ou 404.
-   *Dica:* a função `get_user_todo()` já faz quase tudo.
-
-4. **Rota "meu perfil".** Crie `GET /users/me`, que devolve o usuário
-   logado.
-   *Dica:* basta `T_CurrentUser` e `response_model=UserPublic`.
-
-5. **Contagem por estado.** Crie `GET /todos/stats`, que devolve quantos
-   todos o usuário tem em cada estado, como
-   `{"todo": 3, "done": 5}`.
-   *Dica:* `select(Todo.state, func.count()).group_by(Todo.state)`.
-   Se você fez o exercício 3, declare esta rota **antes** de
-   `GET /todos/{todo_id}`: o FastAPI testa as rotas na ordem, e
-   `/todos/stats` casaria com `{todo_id}` (e daria 422, pois `stats` não
-   é um número).
-
-6. **Validação de senha.** Exija senha com pelo menos 8 caracteres no
-   cadastro.
-   *Dica:* `Field(min_length=8)` em `UserSchema`. Veja quais testes
-   quebram e por quê.
-
-7. **Explorando o async.** Em uma rota de teste, use
-   `time.sleep(2)` e depois `await asyncio.sleep(2)`. Faça várias
-   requisições ao mesmo tempo e compare o tempo total. Isso mostra, na
-   prática, o que significa bloquear o event loop. (Remova a rota
-   depois.)
+As respostas comentadas, com o porquê de cada decisão e as armadilhas
+mais comuns, estão em **[RESPOSTAS.md](RESPOSTAS.md)**.
