@@ -58,6 +58,37 @@ Para gerar uma `SECRET_KEY`:
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
+## Ambiente virtual
+
+O `uv sync` cria o ambiente virtual do projeto na pasta `.venv`, com o
+Python e todas as dependências.
+
+**Não é preciso ativá-lo:** o `uv run <comando>` já executa tudo dentro
+do `.venv`. Todos os comandos deste README usam essa forma.
+
+Se preferir ativar, para digitar `task test`, `alembic ...` ou `pytest`
+sem o prefixo `uv run`, rode dentro da pasta do projeto:
+
+| Terminal | Comando |
+|---|---|
+| Git Bash | `source .venv/Scripts/activate` |
+| PowerShell | `.venv\Scripts\Activate.ps1` |
+| CMD | `.venv\Scripts\activate.bat` |
+| Linux/macOS | `source .venv/bin/activate` |
+
+Para sair do ambiente: `deactivate`.
+
+No PowerShell, se aparecer um erro dizendo que a execução de scripts
+está desabilitada, libere uma vez para o seu usuário:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+**VS Code:** selecione o interpretador do projeto em `Ctrl+Shift+P` →
+**Python: Select Interpreter** → `.venv`. Assim os terminais novos já
+abrem com o ambiente ativo, e o debug usa as mesmas dependências.
+
 ## Como rodar
 
 ### Tudo no Docker
