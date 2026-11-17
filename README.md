@@ -133,9 +133,23 @@ uv run task lint     # lint + verifica a formatação (não altera nada)
 uv run task format   # corrige o que der do lint e formata o código
 ```
 
+Para rodar só parte dos testes, use o pytest direto:
+
+```bash
+uv run pytest tests/test_todos.py   # só um arquivo
+uv run pytest -k patch              # só os testes com "patch" no nome
+uv run pytest -x                    # para no primeiro erro
+uv run pytest exercicios            # testes dos exercícios (fora do task test)
+```
+
 Os testes sobem um Postgres temporário via testcontainers, então o
 **Docker precisa estar rodando**. O banco do `compose.yaml` não é usado
 nem alterado.
+
+Para entender como os testes funcionam (fixtures, isolamento, cada
+ferramenta), veja a seção [Testes](docs/GUIA.md#testes-pytest) do guia.
+Os testes dos exercícios são explicados em
+[EXERCICIOS.md](docs/EXERCICIOS.md#como-usar).
 
 ## Migrações
 
