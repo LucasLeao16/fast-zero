@@ -39,6 +39,11 @@ migrations/           # migrações do Alembic
 tests/                # testes (conftest.py tem as fixtures)
 ```
 
+> 📘 Para entender como cada parte funciona e para que serve cada
+> tecnologia, veja o **[Guia de estudo](docs/GUIA.md)**, com o caminho de
+> uma requisição, explicações de cada ferramenta, o mapa dos arquivos e
+> exercícios.
+
 **Model x schema:** o *model* (`models.py`) é a tabela no banco; o
 *schema* (`schemas/`) é o JSON que entra e sai da API. Eles são separados
 para, por exemplo, nunca devolver a senha (`UserPublic` não tem o campo
