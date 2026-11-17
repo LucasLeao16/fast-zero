@@ -1,3 +1,7 @@
+# O factory-boy não declara seus tipos do jeito que o Pyright espera;
+# o código segue a documentação da biblioteca, então silenciamos os avisos.
+# pyright: reportPrivateImportUsage=false, reportIncompatibleVariableOverride=false
+
 import asyncio
 
 import factory

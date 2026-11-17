@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-from fast_zero.settings import Settings
+from fast_zero.settings import settings
 
 # O engine gerencia o pool de conexões com o banco; é criado uma vez só.
-engine = create_async_engine(Settings().DATABASE_URL)
+engine = create_async_engine(settings.DATABASE_URL)
 
 
 async def get_session():  # pragma: no cover

@@ -33,6 +33,12 @@ dev = [
 # Aplicação, não biblioteca: o uv só instala as dependências
 package = false
 
+# Faz o Pylance/Pyright (VS Code) usarem o ambiente criado pelo uv,
+# mesmo que outro interpretador esteja selecionado no editor.
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
 [tool.pytest.ini_options]
 pythonpath = "."
 asyncio_mode = "auto"

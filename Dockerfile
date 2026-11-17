@@ -16,6 +16,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
 COPY . .
+RUN chmod +x entrypoint.sh
 
 ENV PATH="/app/.venv/bin:$PATH"
 

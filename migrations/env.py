@@ -5,11 +5,11 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from fast_zero.settings import Settings
+from fast_zero.settings import settings
 from fast_zero.models import table_registry
 
 config = context.config
-config.set_main_option("sqlalchemy.url", Settings().DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 
 # Interpret the config file for Python logging.

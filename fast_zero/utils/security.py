@@ -12,9 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fast_zero.database import get_session
 from fast_zero.models import User
-from fast_zero.settings import Settings
-
-settings = Settings()
+from fast_zero.settings import settings
 
 pwd_context = PasswordHash.recommended()
 

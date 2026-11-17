@@ -9,3 +9,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+
+# Instância única usada no projeto todo. Os valores vêm das variáveis de
+# ambiente / .env, por isso o Pyright não os vê como argumentos.
+settings = Settings()  # pyright: ignore[reportCallIssue]
